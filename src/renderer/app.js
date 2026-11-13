@@ -184,7 +184,9 @@
     const r = await li.majInstaller();
     fin();
     if (r.ok) {
-      $("splash-status").textContent = "Installation de la mise à jour, le launcher va redémarrer";
+      // Le launcher se ferme dans quelques secondes : le joueur doit savoir que c'est normal.
+      $("tide-fill").style.transform = "scaleX(1)";
+      $("splash-status").textContent = `Version ${v.version} téléchargée. Le launcher va se fermer, une fenêtre d'installation va s'afficher, puis il se rouvrira tout seul.`;
       return true;
     }
     $("splash-status").textContent = r.erreur;

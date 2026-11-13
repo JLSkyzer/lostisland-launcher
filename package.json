@@ -37,9 +37,11 @@
       "artifactName": "LostIslandLauncher-Setup.${ext}"
     },
     "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "shortcutName": "Lost Island"
+      "oneClick": true,
+      "perMachine": false,
+      "runAfterFinish": true,
+      "shortcutName": "Lost Island",
+      "createDesktopShortcut": true
     },
     "mac": {
       "target": [
