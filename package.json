@@ -1,0 +1,71 @@
+{
+  "name": "lostisland-launcher",
+  "productName": "Lost Island Launcher",
+  "version": "0.1.0",
+  "description": "Launcher du serveur Minecraft Lost Island RP",
+  "main": "src/main/main.js",
+  "author": "Lost Island RP",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "publier-modpack": "node outils/publier-modpack.mjs"
+  },
+  "build": {
+    "appId": "fr.lostisland.launcher",
+    "productName": "Lost Island Launcher",
+    "files": [
+      "src/**/*",
+      "package.json"
+    ],
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "JLSkyzer",
+        "repo": "lostisland-launcher",
+        "releaseType": "release"
+      }
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "artifactName": "LostIslandLauncher-Setup.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "shortcutName": "Lost Island"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.games",
+      "artifactName": "LostIslandLauncher-${arch}.${ext}",
+      "identity": null
+    },
+    "linux": {
+      "target": [
+        "AppImage"
+      ],
+      "category": "Game",
+      "artifactName": "LostIslandLauncher.${ext}"
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.3.2",
+    "electron-builder": "^26.18.0"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.11",
+    "minecraft-launcher-core": "^3.18.2",
+    "msmc": "^5.0.5"
+  }
+}

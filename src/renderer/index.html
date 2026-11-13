@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'none'">
+<title>Lost Island Launcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@500;600;700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="stage">
+  <div id="slot">
+    <div id="win" data-screen="splash">
+
+      <!-- Carte de l'île : chargement et connexion -->
+      <canvas id="map" aria-hidden="true"></canvas>
+
+      <!-- Barre de fenêtre et navigation -->
+      <header id="bar">
+        <span class="wordmark">Lost Island</span>
+        <nav id="nav" aria-label="Navigation principale" hidden>
+          <button class="tab" data-view="play">Jouer</button>
+          <button class="tab" data-view="news">Annonces<i class="dot" id="news-dot" hidden></i></button>
+          <button class="tab" data-view="skin">Skin</button>
+          <button class="tab" data-view="mods">Mods</button>
+          <button class="tab" data-view="settings">Paramètres</button>
+          <i id="tab-mark" aria-hidden="true"></i>
+        </nav>
+        <div class="bar-end">
+          <div id="account" hidden>
+            <button id="account-btn" aria-haspopup="true" aria-expanded="false">
+              <canvas id="avatar" width="8" height="8" aria-hidden="true"></canvas>
+              <span id="account-name">Joueur</span>
+            </button>
+            <div id="account-menu" role="menu" hidden>
+              <p class="menu-note">Compte Microsoft connecté</p>
+              <button role="menuitem" id="menu-site">Ouvrir le site</button>
+              <button role="menuitem" id="menu-logout">Se déconnecter</button>
+            </div>
+          </div>
+          <div class="win-controls">
+            <button id="win-min" aria-label="Réduire le launcher"><svg viewBox="0 0 12 12"><path d="M2 6h8" /></svg></button>
+            <button id="win-close" aria-label="Fermer le launcher"><svg viewBox="0 0 12 12"><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" /></svg></button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Chargement -->
+      <section id="splash" class="screen" aria-label="Chargement du launcher">
+        <div id="splash-logo" role="img" aria-label="Lost Island"></div>
+        <div class="splash-foot">
+          <p id="splash-status" aria-live="polite">Démarrage</p>
+          <div class="tide" aria-hidden="true"><i id="tide-fill"></i></div>
+          <button id="splash-skip">Passer</button>
+        </div>
+      </section>
+
+      <!-- Connexion -->
+      <section id="login" class="screen" aria-label="Connexion" hidden>
+        <div class="login-col">
+          <img src="assets/logo/logo.webp" alt="Lost Island" width="593" height="298">
+          <h1>Une île, un crash, et tout à reconstruire.</h1>
+          <p>Connectez votre compte Microsoft pour rejoindre le serveur.</p>
+          <button id="login-btn" class="cta cta-wide"><span id="login-label">Se connecter avec Microsoft</span></button>
+          <p id="login-status" class="field-note" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <!-- Application -->
+      <main id="app" class="screen" hidden>
+
+        <!-- Jouer -->
+        <section id="view-play" class="view" aria-label="Jouer">
+          <div id="scene" aria-hidden="true">
+            <div class="layer l-sky"><img src="assets/scene/sky.webp" alt=""></div>
+            <div class="layer l-clouds"><img src="assets/scene/clouds.webp" alt=""></div>
+            <div class="layer l-sea" id="sea"></div>
+            <div class="layer l-far"><img src="assets/scene/far.webp" alt=""></div>
+            <div class="layer l-mid"><img src="assets/scene/mid.webp" alt=""></div>
+            <div class="layer l-mid l-fire"><img src="assets/scene/fire.webp" alt=""></div>
+            <div class="layer l-mid l-smoke"><i></i><i></i><i></i><i></i></div>
+            <div class="layer l-fg"><img src="assets/scene/fg.webp" alt=""></div>
+          </div>
+          <div class="scene-shade" aria-hidden="true"></div>
+
+          <div class="play-head">
+            <img src="assets/logo/logo.webp" alt="Lost Island" width="593" height="298">
+            <p class="season" id="season"></p>
+          </div>
+
+          <button id="latest" class="latest">
+            <i class="dot" id="latest-dot" hidden></i>
+            <span class="latest-title" id="latest-title"></span>
+            <span class="latest-date" id="latest-date"></span>
+          </button>
+
+          <div class="dock">
+            <div id="dock-idle" class="dock-row">
+              <button id="play-btn" class="cta cta-play">Jouer</button>
+              <dl class="server">
+                <div><dt id="server-dot" class="off"></dt><dd id="server-state">État du serveur…</dd></div>
+                <div><dt class="sr">Joueurs</dt><dd id="server-players"></dd></div>
+                <div><dt class="sr">Version</dt><dd>Forge 1.20.1</dd></div>
+              </dl>
+            </div>
+
+            <div id="dock-launch" class="dock-row" hidden>
+              <div class="launch">
+                <div class="launch-top">
+                  <strong id="launch-phase" aria-live="polite">Préparation</strong>
+                  <span id="launch-detail"></span>
+                  <span id="launch-pct">0 %</span>
+                </div>
+                <div id="blocks" role="progressbar" aria-label="Progression du lancement" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"></div>
+              </div>
+              <button id="launch-cancel" class="ghost">Annuler</button>
+            </div>
+
+            <div id="dock-error" class="dock-row" hidden>
+              <div class="launch-msg" role="alert">
+                <strong id="error-title">Le lancement s'est arrêté</strong>
+                <span id="error-text"></span>
+              </div>
+              <button id="launch-retry" class="cta">Relancer</button>
+              <button id="launch-dismiss" class="ghost">Fermer</button>
+            </div>
+
+            <div id="dock-running" class="dock-row" hidden>
+              <div class="launch-msg" role="status">
+                <strong>Lost Island est lancé</strong>
+                <span>Session en cours depuis <b id="session-time">0 min 00</b></span>
+              </div>
+              <button id="game-quit" class="ghost">Quitter le jeu</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Annonces -->
+        <section id="view-news" class="view page" aria-labelledby="t-news" hidden>
+          <canvas class="page-map" aria-hidden="true"></canvas>
+          <div class="page-in news-grid">
+            <div class="news-side">
+              <h2 id="t-news">Annonces</h2>
+              <div id="news-list"></div>
+            </div>
+            <article id="news-read" tabindex="-1"></article>
+          </div>
+        </section>
+
+        <!-- Skin -->
+        <section id="view-skin" class="view page" aria-labelledby="t-skin" hidden>
+          <canvas class="page-map" aria-hidden="true"></canvas>
+          <div class="page-in skin-grid">
+            <div id="skin-stage" tabindex="0" role="img" aria-label="Aperçu 3D du skin. Faites glisser ou utilisez les flèches pour le tourner."><div id="skin-rig"></div></div>
+            <div class="skin-side">
+              <h2 id="t-skin">Skin</h2>
+              <p class="lead">Le skin choisi ici devient celui de votre compte Minecraft, sur le serveur comme ailleurs.</p>
+              <label id="skin-drop" for="skin-file">
+                <strong>Déposez un skin ici</strong>
+                <span>ou cliquez pour choisir un fichier .png de 64 × 64 pixels</span>
+                <input type="file" id="skin-file" accept="image/png">
+              </label>
+              <div class="row-inline">
+                <label for="skin-model">Bras</label>
+                <select id="skin-model">
+                  <option value="classic">Larges (Steve)</option>
+                  <option value="slim">Fins (Alex)</option>
+                </select>
+              </div>
+              <p id="skin-msg" class="field-note" aria-live="polite"></p>
+              <button id="skin-reset" class="ghost">Revenir au skin d'origine</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Mods -->
+        <section id="view-mods" class="view page" aria-labelledby="t-mods" hidden>
+          <canvas class="page-map" aria-hidden="true"></canvas>
+          <div class="page-in narrow">
+            <h2 id="t-mods">Mods optionnels</h2>
+            <p class="lead">Le modpack du serveur reste complet. Ces mods s'ajoutent à votre partie, à vous de voir.</p>
+            <div class="rows" id="mods-rows"></div>
+            <p class="field-note" id="mods-note"></p>
+          </div>
+        </section>
+
+        <!-- Paramètres -->
+        <section id="view-settings" class="view page" aria-labelledby="t-settings" hidden>
+          <canvas class="page-map" aria-hidden="true"></canvas>
+          <div class="page-in narrow">
+            <h2 id="t-settings">Paramètres</h2>
+            <div class="rows">
+              <div class="row row-stack">
+                <div class="row-text row-split">
+                  <div><h3 id="l-ram">Mémoire allouée au jeu</h3><p id="ram-hint"></p></div>
+                  <output id="ram-value" for="ram">4 Go</output>
+                </div>
+                <div class="ram">
+                  <div id="ram-blocks" aria-hidden="true"></div>
+                  <input type="range" id="ram" min="2" max="16" step="1" aria-labelledby="l-ram">
+                </div>
+              </div>
+              <div class="row">
+                <div class="row-text row-grow"><h3>Dossier du jeu</h3><p id="path-value" class="path"></p></div>
+                <button id="path-btn" class="ghost">Changer</button>
+              </div>
+              <div class="row">
+                <div class="row-text"><h3 id="l-after">Quand le jeu démarre</h3><p>Choisissez ce que devient le launcher.</p></div>
+                <select id="after" aria-labelledby="l-after">
+                  <option value="keep">Le garder ouvert</option>
+                  <option value="min">Le réduire</option>
+                  <option value="close">Le fermer</option>
+                </select>
+              </div>
+              <div class="row">
+                <div class="row-text"><h3 id="l-rem">Rester connecté</h3><p>Ouvrez le launcher sans repasser par Microsoft.</p></div>
+                <label class="switch"><input type="checkbox" id="remember" aria-labelledby="l-rem"><i></i></label>
+              </div>
+              <div class="row">
+                <div class="row-text"><h3 id="l-anim">Animations</h3><p>Désactivez-les sur un petit PC ou par préférence.</p></div>
+                <label class="switch"><input type="checkbox" id="anim" aria-labelledby="l-anim"><i></i></label>
+              </div>
+              <p class="field-note" id="about"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Enregistrement des réglages -->
+        <div id="savebar" hidden>
+          <span>Modifications non enregistrées</span>
+          <button id="save-cancel" class="ghost small">Annuler</button>
+          <button id="save-ok" class="cta small">Enregistrer</button>
+        </div>
+      </main>
+
+      <!-- Boîte de dialogue -->
+      <div id="veil" hidden>
+        <div id="dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+          <h3 id="dialog-title"></h3>
+          <div id="dialog-body"></div>
+          <div id="dialog-actions"></div>
+        </div>
+      </div>
+
+      <div id="toast" role="status" aria-live="polite" hidden></div>
+      <canvas id="wipe" aria-hidden="true"></canvas>
+    </div>
+
+  </div>
+</div>
+<div id="update" hidden>
+  <span>Une nouvelle version du launcher est prête.</span>
+  <button id="update-btn" class="cta small">Redémarrer pour l'installer</button>
+</div>
+<script src="island.js"></script>
+<script src="skin.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
