@@ -11,7 +11,12 @@ const { json } = require("./telechargement");
 
 let fenetre = null;
 
-if (!app.requestSingleInstanceLock()) app.quit();
+// Essais en développement (LI_CAPTURE, LI_ESSAI_PROFIL) : réglages à part et pas de verrou d'instance unique,
+// pour ne jamais toucher au launcher installé du joueur (ni ses réglages, ni sa fenêtre).
+const ESSAI = !app.isPackaged && !!(process.env.LI_CAPTURE || process.env.LI_ESSAI_PROFIL);
+if (ESSAI) app.setPath("userData", path.join(require("node:os").tmpdir(), "lostisland-launcher-essai"));
+
+if (!ESSAI && !app.requestSingleInstanceLock()) app.quit();
 app.on("second-instance", () => {
   if (!fenetre) return;
   fenetre.show();
@@ -39,7 +44,7 @@ function creerFenetre() {
   });
   fenetre.removeMenu();
   // Essais en développement (capture, faux profil) : sur le second écran, pour ne pas gêner l'écran de travail.
-  if (!app.isPackaged && (process.env.LI_CAPTURE || process.env.LI_ESSAI_PROFIL)) {
+  if (ESSAI) {
     const { screen } = require("electron");
     const autre = screen.getAllDisplays().find((d) => d.id !== screen.getPrimaryDisplay().id);
     if (autre) fenetre.setPosition(autre.workArea.x + 40, autre.workArea.y + 40);

@@ -360,8 +360,9 @@
     $("server-state").textContent = etat;
     $("server-players").textContent = joueurs;
     $("server-dot").className = classe;
-    $("play-btn").disabled = !!reg.maintenance || !pack.ok || pack.vide;
-    $("play-btn").title = !pack.ok ? "Le contenu du jeu est injoignable" : pack.vide ? "Le contenu du jeu n'est pas encore en ligne" : "";
+    // Contenu vide : on peut quand même jouer (Minecraft et Forge seuls), utile pour essayer le lancement.
+    $("play-btn").disabled = !!reg.maintenance || !pack.ok;
+    $("play-btn").title = !pack.ok ? "Le contenu du jeu est injoignable" : pack.vide ? "Aucun mod publié pour l'instant : le jeu démarre avec Forge seul" : "";
     renderNews();
   }
 
