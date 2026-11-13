@@ -394,7 +394,7 @@
     jeuActif = true;
     dock("launch");
     setProgress(0, "Préparation", "");
-    li.lancer(site.reglages?.adresseServeur || null);
+    li.lancer();
   }
   li.surJeu((ev) => {
     if (ev.phase) { setProgress(ev.pct, ev.phase, ev.detail); return; }

@@ -16,7 +16,7 @@ page « Télécharger » du site https://lostisland.eriniumlab.com.
 | Forge | Fixée dans [`src/main/config.js`](src/main/config.js) : Minecraft 1.20.1, Forge 47.4.29 (dernière pour la 1.20.1 au 2026-11-13), installateur vérifié par SHA-1. |
 | Contenu du jeu | Le manifeste `https://lostisland.eriniumlab.com/launcher/manifest.json`, calculé par le site à partir du dossier géré dans **Admin → Fichiers du jeu**. À chaque « Jouer », ce qui est nouveau ou modifié (empreinte SHA-1) est téléchargé ; ce qui a été retiré du site est supprimé, ainsi que tout jar de `mods/` absent du manifeste. |
 | Mods optionnels | Chaque jar du dossier `optionalmod` du site apparaît dans la page « Mods optionnels », avec le nom et la description lus dans le mod. Activé, il est installé dans `mods/`. |
-| Jeu | [minecraft-launcher-core](https://www.npmjs.com/package/minecraft-launcher-core) installe Minecraft et Forge, puis lance le jeu, connecté au serveur (« quick play ») à l'adresse réglée sur le site. |
+| Jeu | [minecraft-launcher-core](https://www.npmjs.com/package/minecraft-launcher-core) installe Minecraft et Forge, puis lance le jeu sur son menu principal ; le joueur rejoint l'île par le bouton « Rejoindre l'île » du mod, qui lit l'adresse réglée sur le site. |
 | Skin | Le skin choisi devient celui du compte Minecraft, par l'API officielle de Minecraft. |
 | Annonces, état du serveur | L'API publique du site (`/api/etat`). |
 | Mises à jour du launcher | Proposées au démarrage : téléchargement, installation, fermeture et relance automatiques ([`src/main/maj.js`](src/main/maj.js)). Windows et Linux par electron-updater ; macOS par un remplacement maison de l'application, le système standard refusant une application non signée. |

@@ -129,7 +129,8 @@ ipcMain.handle("choisir-dossier", async () => {
   return r.canceled ? null : r.filePaths[0];
 });
 
-ipcMain.handle("lancer", (_e, serveur) => {
+// Le jeu s'ouvre sur son menu principal : on rejoint l'île par le bouton « Rejoindre l'île » du mod.
+ipcMain.handle("lancer", () => {
   jeu.lancer((ev) => {
     envoyer("jeu", ev);
     if (ev.etat === "lance") {
@@ -138,7 +139,7 @@ ipcMain.handle("lancer", (_e, serveur) => {
       if (apres === "close") fenetre?.hide(); // le launcher reste en vie tant que le jeu tourne
     }
     if (ev.etat === "ferme" && fenetre && !fenetre.isVisible()) app.quit();
-  }, typeof serveur === "string" ? serveur : null);
+  });
 });
 ipcMain.handle("annuler", () => jeu.annuler());
 ipcMain.handle("quitter-jeu", () => jeu.quitterJeu());

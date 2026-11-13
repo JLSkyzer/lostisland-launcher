@@ -23,7 +23,7 @@ function mo(octets) {
  * envoyer(evenement) : { phase, pct, detail } pendant la préparation,
  * puis { etat: "lance" }, { etat: "ferme", code }, { etat: "erreur", message, pct }.
  */
-async function lancer(envoyer, serveurParDefaut) {
+async function lancer(envoyer) {
   if (enCours()) return;
   controle = new AbortController();
   const signal = controle.signal;
@@ -70,7 +70,6 @@ async function lancer(envoyer, serveurParDefaut) {
       if (journal.length > 200) journal = journal.slice(-200);
     });
 
-    const serveur = serveurParDefaut;
     const enfant = await client.launch({
       root: dossier,
       authorization: utilisateur,
@@ -78,7 +77,6 @@ async function lancer(envoyer, serveurParDefaut) {
       forge: installeur,
       version: { number: MINECRAFT, type: "release" },
       memory: { max: `${r.ram}G`, min: "2G" },
-      ...(serveur && { quickPlay: { type: "multiplayer", identifier: serveur } }),
     });
     if (!enfant) throw new Error(dernierProbleme(journal) ?? "Minecraft n'a pas pu démarrer.");
 
