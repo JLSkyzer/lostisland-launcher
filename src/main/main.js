@@ -38,6 +38,12 @@ function creerFenetre() {
     },
   });
   fenetre.removeMenu();
+  // Essais en développement (capture, faux profil) : sur le second écran, pour ne pas gêner l'écran de travail.
+  if (!app.isPackaged && (process.env.LI_CAPTURE || process.env.LI_ESSAI_PROFIL)) {
+    const { screen } = require("electron");
+    const autre = screen.getAllDisplays().find((d) => d.id !== screen.getPrimaryDisplay().id);
+    if (autre) fenetre.setPosition(autre.workArea.x + 40, autre.workArea.y + 40);
+  }
   fenetre.once("ready-to-show", () => fenetre.show());
   fenetre.loadFile(path.join(__dirname, "..", "renderer", "index.html"));
   // Aucun lien ne s'ouvre dans le launcher : ils partent dans le navigateur, s'ils sont sûrs.
