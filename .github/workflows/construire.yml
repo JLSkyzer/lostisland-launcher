@@ -17,10 +17,11 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - name: Créer la version GitHub (une seule fois, avant les trois constructions)
+      - name: Créer la version GitHub en brouillon (invisible tant que les trois constructions ne sont pas finies)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" || gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --title "Lost Island Launcher $GITHUB_REF_NAME" --notes "Mise à jour du launcher."
+        run: |
+          gh release view "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" || gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft --title "Lost Island Launcher $GITHUB_REF_NAME" --notes "Mise à jour du launcher."
 
   construire:
     needs: [version]
@@ -60,3 +61,14 @@ jobs:
             dist/*.AppImage
           if-no-files-found: ignore
           retention-days: 7
+
+  publier:
+    needs: [construire]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rendre la version publique, une fois les trois systèmes envoyés
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release edit "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --draft=false --latest
