@@ -130,6 +130,10 @@
     await sleep(50);
     $("tide-fill").style.transition = "transform 1s cubic-bezier(.3,.7,.3,1)";
 
+    step(0.08, "Recherche des mises à jour");
+    const nouvelle = await li.majVerifier();
+    if (nouvelle && (await proposerMaj(nouvelle))) return; // le launcher se ferme et se relance à jour
+
     step(0.18, "Connexion au compte");
     const d = await li.demarrage();
     infos = { version: d.version, plateforme: d.plateforme };
@@ -144,6 +148,7 @@
     step(0.74, "Vérification du modpack");
     pack = await li.modpack();
     renderMods();
+    renderSite(); // le bouton « Jouer » dépend aussi du contenu publié
     beginDraft();
 
     step(1, profil ? `Bienvenue, ${profil.nom}` : "Tout est prêt");
@@ -152,6 +157,39 @@
     tide = tideTarget = 1;
     if (profil) enterApp(); else showLogin();
     setInterval(rafraichirSite, 60_000);
+  }
+  // Mise à jour du launcher : proposée au démarrage. Acceptée, elle se télécharge ici, s'installe, puis le
+  // launcher se ferme et se relance tout seul. Renvoie true si le launcher va redémarrer.
+  function proposerMaj(v) {
+    return new Promise((fin) => {
+      openDialog({
+        title: `Mise à jour ${v.version} disponible`,
+        body: "Le launcher va la télécharger, l'installer, puis redémarrer tout seul. Cela prend une minute.",
+        actions: [
+          { label: "Mettre à jour", cta: true, run: async () => { closeDialog(); fin(await installerMaj(v)); } },
+          { label: "Plus tard", run: () => { closeDialog(); fin(false); } },
+        ],
+      });
+    });
+  }
+  async function installerMaj(v) {
+    const mo = (n) => (n / 1048576).toFixed(0);
+    const fin = li.surMajProgression(({ fait, total }) => {
+      const p = total ? fait / total : 0;
+      $("tide-fill").style.transform = `scaleX(${p})`;
+      tideTarget = p;
+      $("splash-status").textContent = total ? `Téléchargement de la version ${v.version} : ${mo(fait)} Mo sur ${mo(total)} Mo` : `Téléchargement de la version ${v.version}`;
+    });
+    $("splash-status").textContent = `Téléchargement de la version ${v.version}`;
+    const r = await li.majInstaller();
+    fin();
+    if (r.ok) {
+      $("splash-status").textContent = "Installation de la mise à jour, le launcher va redémarrer";
+      return true;
+    }
+    $("splash-status").textContent = r.erreur;
+    await sleep(4000);
+    return false;
   }
   async function rafraichirSite() {
     const s = await li.site();
@@ -322,8 +360,8 @@
     $("server-state").textContent = etat;
     $("server-players").textContent = joueurs;
     $("server-dot").className = classe;
-    $("play-btn").disabled = !!reg.maintenance || !pack.ok;
-    $("play-btn").title = !pack.ok ? "Le modpack n'est pas encore publié" : "";
+    $("play-btn").disabled = !!reg.maintenance || !pack.ok || pack.vide;
+    $("play-btn").title = !pack.ok ? "Le contenu du jeu est injoignable" : pack.vide ? "Le contenu du jeu n'est pas encore en ligne" : "";
     renderNews();
   }
 
@@ -469,8 +507,10 @@
     const box = $("mods-rows");
     box.textContent = "";
     $("mods-note").textContent = !pack.ok
-      ? "Le modpack n'est pas encore publié. Les mods optionnels apparaîtront ici."
-      : `Modpack ${pack.version} : ${pack.mods} mods installés d'office.`;
+      ? "Le contenu du jeu est injoignable pour le moment. Les mods optionnels apparaîtront ici."
+      : !pack.optionnels.length
+        ? `Aucun mod optionnel pour l'instant. ${pack.mods} mods sont installés d'office.`
+        : `${pack.mods} mods sont installés d'office, en plus de ceux que vous activez ici.`;
     for (const o of pack.optionnels || []) {
       const row = document.createElement("div");
       row.className = "row";
@@ -494,7 +534,7 @@
       box.appendChild(row);
     }
   }
-  const optionActive = (choix, o) => (o.id in choix ? !!choix[o.id] : !!o.defaut);
+  const optionActive = (choix, o) => !!choix[o.id];
 
   /* ---------- Réglages avec enregistrement ---------- */
   let dirty = null;
@@ -688,11 +728,6 @@
   /* ---------- Fenêtre et mises à jour ---------- */
   $("win-min").addEventListener("click", () => li.fenetre("reduire"));
   $("win-close").addEventListener("click", () => li.fenetre("fermer"));
-  li.surMaj(() => { $("update").hidden = false; });
-  $("update-btn").addEventListener("click", () => {
-    if (jeuActif) { toast("Fermez d'abord le jeu pour installer la mise à jour."); return; }
-    li.installerMaj();
-  });
 
   /* ---------- Démarrage ---------- */
   addEventListener("resize", fit);

@@ -25,7 +25,8 @@ contextBridge.exposeInMainWorld("li", {
   retirerSkin: appel("retirer-skin"),
   lien: appel("lien"),
   fenetre: appel("fenetre"),
-  installerMaj: appel("installer-maj"),
+  majVerifier: appel("maj-verifier"),
+  majInstaller: appel("maj-installer"),
   surJeu: ecoute("jeu"),
-  surMaj: ecoute("maj"),
+  surMajProgression: ecoute("maj-progression"),
 });

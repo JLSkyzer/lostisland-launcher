@@ -1,7 +1,7 @@
 // Processus principal du launcher Lost Island.
 const { app, BrowserWindow, dialog, ipcMain, shell } = require("electron");
 const path = require("node:path");
-const { autoUpdater } = require("electron-updater");
+const maj = require("./maj");
 const { SITE } = require("./config");
 const compte = require("./compte");
 const jeu = require("./jeu");
@@ -84,7 +84,13 @@ ipcMain.handle("site", async () => {
 ipcMain.handle("modpack", async () => {
   try {
     const m = await lireManifeste();
-    return { ok: true, version: m.version, optionnels: m.optionnels ?? [], mods: m.fichiers.filter((f) => f.chemin.startsWith("mods/") && !f.optionnel).length };
+    return {
+      ok: true,
+      version: m.version,
+      optionnels: m.optionnels.map(({ id, nom, description }) => ({ id, nom, description })),
+      mods: m.fichiers.filter((f) => f.chemin.startsWith("mods/")).length,
+      vide: !m.fichiers.length && !m.optionnels.length,
+    };
   } catch {
     return { ok: false };
   }
@@ -152,20 +158,19 @@ ipcMain.handle("fenetre", (_e, action) => {
     else app.quit();
   }
 });
-ipcMain.handle("installer-maj", () => autoUpdater.quitAndInstall());
-
-/* Mises à jour du launcher, depuis les versions publiées sur GitHub. */
-function verifierMaj() {
-  if (!app.isPackaged) return;
-  autoUpdater.autoDownload = true;
-  autoUpdater.on("update-downloaded", (i) => envoyer("maj", { version: i.version }));
-  autoUpdater.on("error", () => {}); // hors ligne, macOS non signé… : on réessaiera au prochain démarrage
-  autoUpdater.checkForUpdates().catch(() => {});
-}
+// Mise à jour du launcher : proposée au démarrage, puis téléchargée, installée et relancée (src/main/maj.js).
+ipcMain.handle("maj-verifier", () => maj.verifier());
+ipcMain.handle("maj-installer", async () => {
+  try {
+    await maj.installer((fait, total) => envoyer("maj-progression", { fait, total }));
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, erreur: e.message };
+  }
+});
 
 app.whenReady().then(() => {
   creerFenetre();
-  verifierMaj();
   // Essai sans écran : LI_CAPTURE=chemin.png photographie la fenêtre après LI_CAPTURE_MS ms, puis quitte.
   if (process.env.LI_CAPTURE) {
     setTimeout(async () => {

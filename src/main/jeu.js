@@ -3,7 +3,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { Client } = require("minecraft-launcher-core");
-const { FORGE_MAVEN } = require("./config");
+const { FORGE, FORGE_MAVEN, FORGE_SHA1, MINECRAFT } = require("./config");
 const { installerJava } = require("./java");
 const { lireManifeste, synchroniser } = require("./modpack");
 const { telechargerTout } = require("./telechargement");
@@ -43,10 +43,10 @@ async function lancer(envoyer, serveurParDefaut) {
 
     const java = await installerJava(dossier, { signal, progression: etape("Installation de Java", 4, 22) });
 
-    const forgeId = `${m.minecraft}-${m.forge}`;
+    const forgeId = `${MINECRAFT}-${FORGE}`;
     const installeur = path.join(dossier, "installeurs", `forge-${forgeId}-installer.jar`);
     await telechargerTout(
-      [{ url: `${FORGE_MAVEN}/${forgeId}/forge-${forgeId}-installer.jar`, chemin: installeur, sha1: m.forgeSha1 ?? null, taille: null }],
+      [{ url: `${FORGE_MAVEN}/${forgeId}/forge-${forgeId}-installer.jar`, chemin: installeur, sha1: FORGE_SHA1, taille: null }],
       { signal, progression: etape("Téléchargement de Forge", 22, 28) },
     );
 
@@ -70,13 +70,13 @@ async function lancer(envoyer, serveurParDefaut) {
       if (journal.length > 200) journal = journal.slice(-200);
     });
 
-    const serveur = m.serveur || serveurParDefaut;
+    const serveur = serveurParDefaut;
     const enfant = await client.launch({
       root: dossier,
       authorization: utilisateur,
       javaPath: java,
       forge: installeur,
-      version: { number: m.minecraft, type: "release" },
+      version: { number: MINECRAFT, type: "release" },
       memory: { max: `${r.ram}G`, min: "2G" },
       ...(serveur && { quickPlay: { type: "multiplayer", identifier: serveur } }),
     });
