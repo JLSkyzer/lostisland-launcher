@@ -38,7 +38,17 @@ npm start
 ```
 
 Variables d'essai, ignorées dans le launcher installé : `LI_ESSAI_PROFIL=Pseudo` montre l'écran principal
-sans se connecter ; `LI_CAPTURE=fichier.png` (avec `LI_CAPTURE_MS`) photographie la fenêtre puis quitte.
+sans se connecter ; `LI_CAPTURE=fichier.png` (avec `LI_CAPTURE_MS`) photographie la fenêtre puis quitte ;
+`LI_ESSAI_VUE=settings` (ou `play`, `news`, `skin`, `mods`) ouvre directement une page ; `LI_ESSAI_RAM=8` simule un PC
+de 8 Go (curseur de mémoire).
+
+## Mémoire et arguments Java
+
+Le curseur de mémoire va de 2 Go jusqu'à la mémoire réelle du PC (`stockage.ramPc`) ; une valeur enregistrée plus
+grande est ramenée à cette limite, à l'affichage comme au lancement. Les arguments optimisés (activés par défaut) et
+le découpage des arguments saisis par le joueur sont dans `src/main/arguments.js` (source et réglages écartés
+expliqués en tête du fichier). Toute modification de la liste doit être vérifiée sur le Java du jeu :
+`java -XX:+PrintFlagsFinal <arguments> -version` doit sortir en code 0, sinon Minecraft ne démarre plus.
 
 ## Publier une version du launcher
 
