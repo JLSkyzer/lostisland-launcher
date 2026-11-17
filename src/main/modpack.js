@@ -11,10 +11,15 @@
 // À chaque « Jouer » : ce qui manque ou dont l'empreinte a changé est téléchargé ; ce que le launcher avait
 // posé et qui n'est plus dans le manifeste est retiré, ainsi que tout jar de mods/ absent du manifeste (le
 // joueur doit avoir les mêmes mods que le serveur, plus ses mods optionnels).
+//
+// Fichiers de réglages (texte : .txt, .json, .toml, .cfg…, hors de mods/) : ils appartiennent au joueur une fois
+// posés. Le launcher retient l'empreinte de la version qu'il a posée ; si le fichier présent n'est ni celle-là ni
+// celle du manifeste, le joueur l'a modifié (ou l'avait avant) et il est gardé tel quel, jamais écrasé ni retiré.
+// Un fichier de réglages non modifié suit les mises à jour du site. Le supprimer redonne la version du site.
 const fs = require("node:fs");
 const path = require("node:path");
 const { MANIFESTE } = require("./config");
-const { json, telechargerTout } = require("./telechargement");
+const { json, telechargerTout, sha1 } = require("./telechargement");
 
 const ETAT = ".lostisland-contenu.json";
 // Dossiers que le launcher et Minecraft remplissent eux-mêmes : jamais vidés par la synchronisation.
@@ -36,17 +41,37 @@ function cheminSur(dossierJeu, rel) {
 
 const optionnelActif = (choix, o) => !!choix?.[o.id];
 
+const REGLAGES = /\.(txt|json|json5|toml|cfg|conf|ini|properties|ya?ml|snbt)$/i;
+const estReglage = (rel) => REGLAGES.test(rel) && !rel.startsWith("mods/");
+
+// Empreinte d'un fichier présent, ou null s'il n'existe pas.
+const empreinte = (chemin) => sha1(chemin).catch(() => null);
+
 async function synchroniser(dossierJeu, m, choix, { signal, progression }) {
   const voulus = [...m.fichiers, ...m.optionnels.filter((o) => optionnelActif(choix, o))];
-  const fichiers = voulus.map((f) => ({ url: f.url, chemin: cheminSur(dossierJeu, f.chemin), sha1: f.sha1, taille: f.taille }));
+  const etatFichier = path.join(dossierJeu, ETAT);
+  let anciens = [], poses = {};
+  try {
+    const e = JSON.parse(fs.readFileSync(etatFichier, "utf8"));
+    anciens = e.fichiers ?? [];
+    poses = e.poses ?? {}; // chemin -> empreinte de la version posée par le launcher
+  } catch {}
+
+  // Fichiers de réglages modifiés par le joueur : ni téléchargés, ni retirés.
+  const aGarder = new Set();
+  for (const f of voulus) {
+    if (!estReglage(f.chemin)) continue;
+    const local = await empreinte(cheminSur(dossierJeu, f.chemin));
+    if (local && local !== f.sha1 && local !== poses[f.chemin]) aGarder.add(f.chemin);
+  }
+  const aTelecharger = voulus.filter((f) => !aGarder.has(f.chemin));
+  const fichiers = aTelecharger.map((f) => ({ url: f.url, chemin: cheminSur(dossierJeu, f.chemin), sha1: f.sha1, taille: f.taille }));
   const r = await telechargerTout(fichiers, { signal, progression });
+  const nouveauxPoses = {};
+  for (const f of aTelecharger) if (estReglage(f.chemin)) nouveauxPoses[f.chemin] = f.sha1;
+  for (const rel of aGarder) if (poses[rel]) nouveauxPoses[rel] = poses[rel];
 
   const gardes = new Set(voulus.map((f) => path.normalize(f.chemin)));
-  const etatFichier = path.join(dossierJeu, ETAT);
-  let anciens = [];
-  try {
-    anciens = JSON.parse(fs.readFileSync(etatFichier, "utf8")).fichiers ?? [];
-  } catch {}
 
   const retires = [];
   const retirer = (rel) => {
@@ -55,10 +80,16 @@ async function synchroniser(dossierJeu, m, choix, { signal, progression }) {
       retires.push(rel);
     } catch {}
   };
-  // 1. Ce que le launcher avait posé et qui a disparu du manifeste.
+  // 1. Ce que le launcher avait posé et qui a disparu du manifeste (sauf un réglage modifié par le joueur).
   for (const rel of anciens) {
     const n = path.normalize(rel);
-    if (!gardes.has(n) && !PROTEGES.includes(n.split(path.sep)[0])) retirer(n);
+    if (gardes.has(n) || PROTEGES.includes(n.split(path.sep)[0])) continue;
+    const web = n.split(path.sep).join("/");
+    if (estReglage(web)) {
+      const local = await empreinte(cheminSur(dossierJeu, n));
+      if (local && local !== poses[web]) continue;
+    }
+    retirer(n);
   }
   // 2. Tout jar de mods/ qui n'est pas voulu (mod ajouté à la main, optionnel désactivé).
   const dossierMods = path.join(dossierJeu, "mods");
@@ -68,8 +99,8 @@ async function synchroniser(dossierJeu, m, choix, { signal, progression }) {
       if (nom.endsWith(".jar") && !gardes.has(rel) && !retires.includes(rel)) retirer(rel);
     }
   }
-  fs.writeFileSync(etatFichier, JSON.stringify({ version: m.version, fichiers: [...gardes] }, null, 2));
-  return { ...r, retires: retires.length, mods: voulus.filter((f) => f.chemin.startsWith("mods/")).length };
+  fs.writeFileSync(etatFichier, JSON.stringify({ version: m.version, fichiers: [...gardes], poses: nouveauxPoses }, null, 2));
+  return { ...r, retires: retires.length, gardes: aGarder.size, mods: voulus.filter((f) => f.chemin.startsWith("mods/")).length };
 }
 
 module.exports = { lireManifeste, synchroniser };

@@ -341,7 +341,15 @@
     scene.style.setProperty("--mx", mx.toFixed(3));
     scene.style.setProperty("--my", my.toFixed(3));
   }
-  function startScene() { if (!sceneRaf) sceneRaf = requestAnimationFrame(sceneLoop); }
+  // Pendant la partie, rien ne bouge : l'animation disputerait la carte graphique au jeu (micro-saccades).
+  let enJeu = false;
+  function startScene() { if (!sceneRaf && !enJeu) sceneRaf = requestAnimationFrame(sceneLoop); }
+  function pauseJeu(on) {
+    enJeu = on;
+    document.documentElement.classList.toggle("en-jeu", on);
+    if (on) stopScene();
+    else if (win.dataset.screen === "app") startScene();
+  }
   function stopScene() { cancelAnimationFrame(sceneRaf); sceneRaf = 0; }
   win.addEventListener("pointermove", (e) => {
     const r = win.getBoundingClientRect();
@@ -399,15 +407,17 @@
   li.surJeu((ev) => {
     if (ev.phase) { setProgress(ev.pct, ev.phase, ev.detail); return; }
     if (ev.etat === "lance") gameStarted();
-    if (ev.etat === "annule") { jeuActif = false; dock("idle"); toast("Lancement annulé"); }
+    if (ev.etat === "annule") { jeuActif = false; pauseJeu(false); dock("idle"); toast("Lancement annulé"); }
     if (ev.etat === "erreur") {
       jeuActif = false;
+      pauseJeu(false);
       $("error-title").textContent = `Le lancement s'est arrêté à ${Math.round(ev.pct || 0)} %`;
       $("error-text").textContent = ev.message;
       dock("error");
     }
     if (ev.etat === "ferme") {
       jeuActif = false;
+      pauseJeu(false);
       clearInterval(sessionTimer);
       const temps = $("session-time").textContent;
       dock("idle");
@@ -419,6 +429,7 @@
     }
   });
   function gameStarted() {
+    pauseJeu(true);
     dock("running");
     const t0 = Date.now();
     const tick = () => {

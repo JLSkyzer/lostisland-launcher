@@ -55,7 +55,7 @@ async function lancer(envoyer) {
     );
 
     const synchro = await synchroniser(dossier, m, r.optionnels, { signal, progression: etape("Téléchargement du modpack", 28, 82) });
-    etape("Mise en place des mods", 82, 84)(0, 0, `${synchro.mods} mods${synchro.retires ? `, ${synchro.retires} retirés` : ""}`);
+    etape("Mise en place des mods", 82, 84)(0, 0, `${synchro.mods} mods${synchro.retires ? `, ${synchro.retires} retirés` : ""}${synchro.gardes ? `, ${synchro.gardes} réglages personnels gardés` : ""}`);
 
     const utilisateur = await compte.utilisateurMclc();
     if (signal.aborted) throw new Error("annulé");
