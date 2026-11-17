@@ -1,7 +1,7 @@
 {
   "name": "lostisland-launcher",
   "productName": "Lost Island Launcher",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Launcher du serveur Minecraft Lost Island RP",
   "main": "src/main/main.js",
   "author": "Lost Island RP",
