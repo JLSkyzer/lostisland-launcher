@@ -250,6 +250,11 @@ textarea { resize: vertical; display: block; min-height: 120px; }
 form label { display: block; font-weight: 500; margin: 14px 0 5px; }
 .field-note { font-size: 14px; color: var(--lichen); min-height: 1.5em; }
 .field-note b { color: var(--ecume); font-weight: 600; }
+.field-note.erreur { color: #f0a58c; }
+#args { min-height: 0; font: 13px/1.5 ui-monospace, Consolas, monospace; }
+#args[aria-invalid="true"] { border-color: #f0a58c; }
+button.lien { background: none; border: 0; padding: 0; color: var(--pousse-vif); text-decoration: underline; cursor: pointer; font: inherit; }
+.args-liste { max-height: 46vh; overflow: auto; margin: 12px 0 0; padding: 10px 12px; background: var(--sousbois); font: 12px/1.6 ui-monospace, Consolas, monospace; white-space: pre; }
 .field-error { color: var(--couchant); font-size: 14px; min-height: 1.5em; margin-top: 8px; }
 .narrow-form { max-width: 380px; }
 #admin-form .cta { width: 100%; margin: 4px 0 12px; }
@@ -363,3 +368,4 @@ form label { display: block; font-weight: 500; margin: 14px 0 5px; }
 #about { margin-top: 8px; }
 #news-read p + p { margin-top: 12px; }
 #news-read > button { margin-top: 20px; }
+.field-note.erreur:empty { display: none; }

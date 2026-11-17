@@ -6,7 +6,7 @@
   const SITE = "https://lostisland.eriniumlab.com";
   const LETTERS = [[78, 0], [182, 0], [286, 0], [390, 0], [0, 129], [52, 129], [156, 129], [260, 129], [364, 129], [468, 129]];
 
-  let R = { ram: 6, dossier: "", apres: "keep", rester: true, animations: true, optionnels: {}, vue: null };
+  let R = { ram: 6, ramPc: 16, dossier: "", apres: "keep", rester: true, animations: true, argsOptimises: true, argsJava: "", optionnels: {}, vue: null };
   let profil = null;
   let site = { ok: false, annonces: [], reglages: {}, serveur: null };
   let pack = { ok: false, optionnels: [], mods: 0 };
@@ -155,7 +155,7 @@
     await sleep(calm() ? 200 : 700);
     bootDone = true;
     tide = tideTarget = 1;
-    if (profil) enterApp(); else showLogin();
+    if (profil) enterApp(d.essaiVue); else showLogin(); // essaiVue : essais en développement seulement
     setInterval(rafraichirSite, 60_000);
   }
   // Mise à jour du launcher : proposée au démarrage. Acceptée, elle se télécharge ici, s'installe, puis le
@@ -206,8 +206,8 @@
     resetLoginButton();
     $("login-status").textContent = "";
   }
-  function enterApp() {
-    wipe(() => { setScreen("app"); go("play", true); applyProfile(); renderNews(); notifyNew(); });
+  function enterApp(vue) {
+    wipe(() => { setScreen("app"); go(PAGES.includes(vue) ? vue : "play", true); applyProfile(); renderNews(); notifyNew(); });
   }
 
   /* ---------- Connexion ---------- */
@@ -541,15 +541,20 @@
 
   /* ---------- Réglages avec enregistrement ---------- */
   let dirty = null;
-  const SECTION_KEYS = { settings: ["ram", "dossier", "apres", "rester", "animations"], mods: ["optionnels"] };
+  const SECTION_KEYS = { settings: ["ram", "dossier", "apres", "rester", "animations", "argsOptimises", "argsJava"], mods: ["optionnels"] };
   let draft = {};
   function beginDraft() {
-    draft = { ram: R.ram, dossier: R.dossier, apres: R.apres, rester: R.rester, animations: R.animations, optionnels: { ...R.optionnels } };
+    draft = { ram: R.ram, dossier: R.dossier, apres: R.apres, rester: R.rester, animations: R.animations,
+      argsOptimises: R.argsOptimises, argsJava: R.argsJava, optionnels: { ...R.optionnels } };
     syncControls();
   }
   function syncControls() {
+    construireRam();
     $("ram").value = draft.ram;
     paintRam();
+    $("opt").checked = draft.argsOptimises;
+    $("args").value = draft.argsJava;
+    afficherErreursArgs([]);
     $("path-value").textContent = draft.dossier;
     $("after").value = draft.apres;
     $("remember").checked = draft.rester;
@@ -570,6 +575,9 @@
     $("savebar").hidden = !(dirty && dirty === view);
   }
   async function commit() {
+    // Des arguments invalides ne sont jamais enregistrés : le joueur corrige d'abord.
+    const erreurs = await li.verifierArgs(draft.argsJava);
+    if (erreurs.length) { afficherErreursArgs(erreurs); $("args").focus(); return; }
     const wasMods = dirty === "mods";
     R = await li.reglages(draft);
     dirty = null;
@@ -594,22 +602,58 @@
     return false;
   }
 
-  // Mémoire : un bloc par Go, repère sur la plage conseillée.
+  // Mémoire : un bloc par Go, de 2 Go jusqu'à la mémoire réelle du PC, repère sur la plage conseillée.
   const ramBox = $("ram-blocks");
-  for (let g = 2; g <= 16; g++) {
-    const i = document.createElement("i");
-    if (g >= 6 && g <= 8) i.className = "ideal";
-    ramBox.appendChild(i);
+  function construireRam() {
+    const max = Math.max(2, R.ramPc || 16);
+    $("ram").max = max;
+    if (ramBox.childElementCount === max - 1) return;
+    ramBox.textContent = "";
+    ramBox.style.gridTemplateColumns = `repeat(${max - 1}, 1fr)`;
+    for (let g = 2; g <= max; g++) {
+      const i = document.createElement("i");
+      if (g >= 6 && g <= 8) i.className = "ideal";
+      ramBox.appendChild(i);
+    }
   }
   function paintRam() {
     const v = +$("ram").value;
+    const pc = R.ramPc || 16;
     [...ramBox.children].forEach((b, k) => b.classList.toggle("on", k + 2 <= v));
     $("ram-value").textContent = v + " Go";
     $("ram").setAttribute("aria-valuetext", v + " gigaoctets");
-    $("ram-hint").textContent = v < 6
-      ? "Attention, le modpack risque de manquer de mémoire en dessous de 6 Go."
-      : v > 8 ? "Plus que nécessaire pour le modpack. Gardez-en assez pour le système." : "La plage conseillée pour ce modpack va de 6 à 8 Go.";
+    $("ram-hint").textContent = v > pc - 2
+      ? `Votre PC a ${pc} Go : laissez-en au moins 2 au système, sinon tout ralentit.`
+      : v < 6
+        ? "Attention, le modpack risque de manquer de mémoire en dessous de 6 Go."
+        : v > 8 ? `Plus que nécessaire pour le modpack (votre PC a ${pc} Go).` : `La plage conseillée pour ce modpack va de 6 à 8 Go (votre PC a ${pc} Go).`;
   }
+
+  // Arguments de lancement : vérifiés pendant la saisie par le processus principal (mêmes règles qu'au lancement).
+  function afficherErreursArgs(erreurs) {
+    const p = $("args-erreurs");
+    p.textContent = erreurs.join(" ");
+    $("args").setAttribute("aria-invalid", erreurs.length ? "true" : "false");
+  }
+  let minuteurArgs = 0;
+  $("args").addEventListener("input", (e) => {
+    draft.argsJava = e.target.value;
+    touch();
+    clearTimeout(minuteurArgs);
+    minuteurArgs = setTimeout(async () => afficherErreursArgs(await li.verifierArgs(draft.argsJava)), 250);
+  });
+  $("opt").addEventListener("change", (e) => { draft.argsOptimises = e.target.checked; touch(); });
+  $("opt-voir").addEventListener("click", async () => {
+    const liste = await li.argsOptimises();
+    const pre = document.createElement("pre");
+    pre.className = "args-liste";
+    pre.textContent = liste.join(String.fromCharCode(10));
+    const note = document.createElement("p");
+    note.textContent = "Ajoutés au lancement quand l'option est activée. Source : jeu G1GC de brucethemoose (Minecraft Performance Flags Benchmarks), sans les réglages qui demandent des droits administrateur ou réservent toute la mémoire au démarrage.";
+    const box = document.createElement("div");
+    box.append(note, pre);
+    openDialog({ title: "Arguments optimisés", node: box, actions: [{ label: "Fermer", run: closeDialog }] });
+  });
   $("ram").addEventListener("input", (e) => { draft.ram = +e.target.value; paintRam(); touch(); });
   $("after").addEventListener("change", (e) => { draft.apres = e.target.value; touch(); });
   $("remember").addEventListener("change", (e) => { draft.rester = e.target.checked; touch(); });

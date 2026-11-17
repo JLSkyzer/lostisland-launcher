@@ -7,6 +7,7 @@ const compte = require("./compte");
 const jeu = require("./jeu");
 const stockage = require("./stockage");
 const { lireManifeste } = require("./modpack");
+const { decouper, OPTIMISES } = require("./arguments");
 const { json } = require("./telechargement");
 
 let fenetre = null;
@@ -75,6 +76,8 @@ ipcMain.handle("demarrage", async () => ({
   reglages: stockage.reglagesPublics(),
   // Développement seulement (jamais dans le launcher installé) : un faux profil pour voir l'écran principal.
   profil: !app.isPackaged && process.env.LI_ESSAI_PROFIL ? { nom: process.env.LI_ESSAI_PROFIL, uuid: "essai", skin: null } : await compte.reprendre(),
+  // Développement seulement : page à ouvrir directement (LI_ESSAI_VUE=settings…), pour photographier une page.
+  essaiVue: !app.isPackaged ? process.env.LI_ESSAI_VUE || null : null,
 }));
 
 // État public du site : annonces publiées, réglages (saison, maintenance, adresse du serveur), serveur en ligne.
@@ -113,7 +116,10 @@ ipcMain.handle("rester-connecte", (_e, rester) => compte.choisirResterConnecte(!
 
 ipcMain.handle("reglages", (_e, modifs) => {
   const permis = {};
-  if (Number.isInteger(modifs?.ram) && modifs.ram >= 2 && modifs.ram <= 32) permis.ram = modifs.ram;
+  if (Number.isInteger(modifs?.ram) && modifs.ram >= 2 && modifs.ram <= stockage.ramPc()) permis.ram = modifs.ram;
+  if (typeof modifs?.argsOptimises === "boolean") permis.argsOptimises = modifs.argsOptimises;
+  // Arguments libres : gardés seulement s'ils sont entièrement valides (la page affiche les erreurs avant).
+  if (typeof modifs?.argsJava === "string" && !decouper(modifs.argsJava).erreurs.length) permis.argsJava = modifs.argsJava.trim();
   if (["keep", "min", "close"].includes(modifs?.apres)) permis.apres = modifs.apres;
   if (typeof modifs?.animations === "boolean") permis.animations = modifs.animations;
   if (typeof modifs?.dossier === "string") permis.dossier = modifs.dossier;
@@ -123,6 +129,10 @@ ipcMain.handle("reglages", (_e, modifs) => {
   stockage.ecrire(permis);
   return stockage.reglagesPublics();
 });
+
+// Arguments Java : vérification en direct pendant la saisie, et liste des arguments optimisés à afficher.
+ipcMain.handle("verifier-args", (_e, texte) => decouper(typeof texte === "string" ? texte : "").erreurs);
+ipcMain.handle("args-optimises", () => OPTIMISES);
 
 ipcMain.handle("choisir-dossier", async () => {
   const r = await dialog.showOpenDialog(fenetre, { title: "Dossier du jeu", properties: ["openDirectory", "createDirectory"], defaultPath: stockage.dossierJeu() });

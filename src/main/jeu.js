@@ -9,6 +9,7 @@ const { lireManifeste, synchroniser } = require("./modpack");
 const { telechargerTout } = require("./telechargement");
 const compte = require("./compte");
 const stockage = require("./stockage");
+const { argumentsJava } = require("./arguments");
 
 let controle = null; // AbortController de la préparation en cours
 let processus = null; // processus Java du jeu
@@ -37,8 +38,11 @@ async function lancer(envoyer) {
     const r = stockage.lire();
     const dossier = stockage.dossierJeu();
     fs.mkdirSync(dossier, { recursive: true });
+    // Jamais plus que la mémoire réelle du PC (un réglage peut venir d'un autre PC ou d'une ancienne version).
+    const ram = Math.min(r.ram, stockage.ramPc());
+    const java_args = argumentsJava({ optimises: r.argsOptimises, libres: r.argsJava });
 
-    etape("Préparation", 0, 4)(0, 0, `${r.ram} Go de mémoire alloués`);
+    etape("Préparation", 0, 4)(0, 0, `${ram} Go de mémoire alloués${r.argsOptimises ? ", arguments optimisés" : ""}`);
     const m = await lireManifeste(signal);
 
     const java = await installerJava(dossier, { signal, progression: etape("Installation de Java", 4, 22) });
@@ -76,7 +80,10 @@ async function lancer(envoyer) {
       javaPath: java,
       forge: installeur,
       version: { number: MINECRAFT, type: "release" },
-      memory: { max: `${r.ram}G`, min: "2G" },
+      // Avec les arguments optimisés : minimum = maximum (conseil de la référence), sauf sur un PC de moins de 16 Go
+      // où le jeu occuperait presque toute la mémoire dès le démarrage.
+      memory: { max: `${ram}G`, min: r.argsOptimises && stockage.ramPc() >= 16 ? `${ram}G` : "2G" },
+      customArgs: java_args.args,
     });
     if (!enfant) throw new Error(dernierProbleme(journal) ?? "Minecraft n'a pas pu démarrer.");
 

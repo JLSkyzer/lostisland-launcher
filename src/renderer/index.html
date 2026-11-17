@@ -203,6 +203,15 @@
                 </div>
               </div>
               <div class="row">
+                <div class="row-text"><h3 id="l-opt">Arguments optimisés</h3><p>Réglages Java éprouvés pour Minecraft : moins de saccades en jeu. <button id="opt-voir" class="lien" type="button">Voir la liste</button></p></div>
+                <label class="switch"><input type="checkbox" id="opt" aria-labelledby="l-opt"><i></i></label>
+              </div>
+              <div class="row row-stack">
+                <div class="row-text"><h3 id="l-args">Arguments de lancement</h3><p>Arguments Java ajoutés au lancement du jeu, séparés par des espaces. Laissez vide si vous ne savez pas.</p></div>
+                <textarea id="args" aria-labelledby="l-args" aria-describedby="args-erreurs" rows="3" spellcheck="false" placeholder="-XX:+UseStringDeduplication"></textarea>
+                <p class="field-note erreur" id="args-erreurs" aria-live="polite"></p>
+              </div>
+              <div class="row">
                 <div class="row-text row-grow"><h3>Dossier du jeu</h3><p id="path-value" class="path"></p></div>
                 <button id="path-btn" class="ghost">Changer</button>
               </div>

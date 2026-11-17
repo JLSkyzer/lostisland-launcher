@@ -2,7 +2,15 @@
 // Le jeton de reconnexion Microsoft est chiffré par le système (safeStorage : DPAPI, trousseau, libsecret).
 const { app, safeStorage } = require("electron");
 const fs = require("node:fs");
+const os = require("node:os");
 const path = require("node:path");
+
+// Mémoire vive totale du PC, en Go arrondis (31,9 Go -> 32, 7,9 Go -> 8).
+// LI_ESSAI_RAM (développement seulement) simule un autre PC, par exemple 8 Go.
+const ramPc = () => {
+  const essai = !app.isPackaged && Number(process.env.LI_ESSAI_RAM);
+  return Math.max(2, essai || Math.round(os.totalmem() / 1024 ** 3));
+};
 
 const fichier = () => path.join(app.getPath("userData"), "reglages.json");
 
@@ -12,6 +20,8 @@ const DEFAUTS = {
   apres: "keep", // keep | min | close
   rester: true,
   animations: true,
+  argsOptimises: true, // arguments Java optimisés (voir arguments.js)
+  argsJava: "", // arguments Java supplémentaires saisis par le joueur
   optionnels: {}, // id du mod optionnel -> activé ou non (absent : valeur par défaut du manifeste)
   vue: null, // dernière annonce lue
 };
@@ -40,7 +50,9 @@ function ecrire(modifs) {
 
 function reglagesPublics() {
   const { jeton, ...r } = lire();
-  return { ...r, dossier: r.dossier ?? dossierJeuParDefaut() };
+  const pc = ramPc();
+  // ram ramenée à la mémoire du PC : la page n'affiche jamais plus que ce que le PC possède.
+  return { ...r, ram: Math.min(r.ram, pc), ramPc: pc, dossier: r.dossier ?? dossierJeuParDefaut() };
 }
 
 function dossierJeuParDefaut() {
@@ -69,4 +81,4 @@ function jetonGarde() {
   }
 }
 
-module.exports = { lire, ecrire, reglagesPublics, dossierJeu, dossierJeuParDefaut, garderJeton, jetonGarde };
+module.exports = { lire, ecrire, reglagesPublics, dossierJeu, dossierJeuParDefaut, garderJeton, jetonGarde, ramPc };

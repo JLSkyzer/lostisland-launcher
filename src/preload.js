@@ -17,6 +17,8 @@ contextBridge.exposeInMainWorld("li", {
   resterConnecte: appel("rester-connecte"),
   reglages: appel("reglages"),
   choisirDossier: appel("choisir-dossier"),
+  verifierArgs: appel("verifier-args"),
+  argsOptimises: appel("args-optimises"),
   lancer: appel("lancer"),
   annuler: appel("annuler"),
   quitterJeu: appel("quitter-jeu"),
