@@ -304,8 +304,9 @@ button.lien { background: none; border: 0; padding: 0; color: var(--pousse-vif);
 #demo input { accent-color: var(--pousse); margin: 0; }
 
 /* Sans animation */
-/* Jeu lancé : animations figées (pas arrêtées), elles reprennent où elles étaient à la fermeture du jeu. */
-.en-jeu *, .en-jeu *::before, .en-jeu *::after { animation-play-state: paused !important; }
+/* Jeu lancé : seules les animations du décor, qui tournent en boucle, sont figées ; elles reprennent à la fermeture
+   du jeu. Jamais les animations d'apparition : figées à leur début, elles laisseraient les pages invisibles. */
+.en-jeu .l-clouds img, .en-jeu .l-fire img, .en-jeu .l-smoke i, .en-jeu #server-dot.pulse { animation-play-state: paused; }
 .calm *, .calm *::before, .calm *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; transition-duration: .001s !important; }

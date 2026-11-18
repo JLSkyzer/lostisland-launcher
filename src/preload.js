@@ -17,6 +17,7 @@ contextBridge.exposeInMainWorld("li", {
   resterConnecte: appel("rester-connecte"),
   reglages: appel("reglages"),
   choisirDossier: appel("choisir-dossier"),
+  ouvrirDossier: appel("ouvrir-dossier"),
   verifierArgs: appel("verifier-args"),
   argsOptimises: appel("args-optimises"),
   lancer: appel("lancer"),

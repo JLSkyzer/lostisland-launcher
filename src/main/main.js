@@ -134,6 +134,13 @@ ipcMain.handle("reglages", (_e, modifs) => {
 ipcMain.handle("verifier-args", (_e, texte) => decouper(typeof texte === "string" ? texte : "").erreurs);
 ipcMain.handle("args-optimises", () => OPTIMISES);
 
+// Ouvre le dossier du jeu enregistré (.lostisland) dans l'explorateur ; le crée s'il n'existe pas encore.
+ipcMain.handle("ouvrir-dossier", async () => {
+  const d = stockage.dossierJeu();
+  require("node:fs").mkdirSync(d, { recursive: true });
+  return (await shell.openPath(d)) || null; // chaîne vide = ouvert
+});
+
 ipcMain.handle("choisir-dossier", async () => {
   const r = await dialog.showOpenDialog(fenetre, { title: "Dossier du jeu", properties: ["openDirectory", "createDirectory"], defaultPath: stockage.dossierJeu() });
   return r.canceled ? null : r.filePaths[0];

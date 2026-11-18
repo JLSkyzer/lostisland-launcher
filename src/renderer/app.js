@@ -669,6 +669,10 @@
   $("after").addEventListener("change", (e) => { draft.apres = e.target.value; touch(); });
   $("remember").addEventListener("change", (e) => { draft.rester = e.target.checked; touch(); });
   $("anim").addEventListener("change", (e) => { draft.animations = e.target.checked; touch(); });
+  $("path-open").addEventListener("click", async () => {
+    const erreur = await li.ouvrirDossier();
+    if (erreur) toast("Impossible d'ouvrir le dossier du jeu");
+  });
   $("path-btn").addEventListener("click", async () => {
     const d = await li.choisirDossier();
     if (!d) return;
