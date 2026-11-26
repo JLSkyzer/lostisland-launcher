@@ -6,7 +6,7 @@
   const SITE = "https://lostisland.eriniumlab.com";
   const LETTERS = [[78, 0], [182, 0], [286, 0], [390, 0], [0, 129], [52, 129], [156, 129], [260, 129], [364, 129], [468, 129]];
 
-  let R = { ram: 6, ramPc: 16, dossier: "", apres: "keep", rester: true, animations: true, argsOptimises: true, argsJava: "", optionnels: {}, vue: null };
+  let R = { ram: 6, ramPc: 16, dossier: "", apres: "keep", rester: true, animations: true, argsOptimises: false, argsJava: "", optionnels: {}, vue: null };
   let profil = null;
   let site = { ok: false, annonces: [], reglages: {}, serveur: null };
   let pack = { ok: false, optionnels: [], mods: 0 };
@@ -660,10 +660,10 @@
     pre.className = "args-liste";
     pre.textContent = liste.join(String.fromCharCode(10));
     const note = document.createElement("p");
-    note.textContent = "Ajoutés au lancement quand l'option est activée. Source : jeu G1GC de brucethemoose (Minecraft Performance Flags Benchmarks), sans les réglages qui demandent des droits administrateur ou réservent toute la mémoire au démarrage.";
+    note.textContent = "Ajoutés au lancement quand l'option est activée. Source : jeu G1GC de brucethemoose (Minecraft Performance Flags Benchmarks). Désactivés par défaut : avec eux, des joueurs ont des micro-saccades qu'ils n'ont pas sur CurseForge, qui lance Java sans ces réglages.";
     const box = document.createElement("div");
     box.append(note, pre);
-    openDialog({ title: "Arguments optimisés", node: box, actions: [{ label: "Fermer", run: closeDialog }] });
+    openDialog({ title: "Arguments expérimentaux", node: box, actions: [{ label: "Fermer", run: closeDialog }] });
   });
   $("ram").addEventListener("input", (e) => { draft.ram = +e.target.value; paintRam(); touch(); });
   $("after").addEventListener("change", (e) => { draft.apres = e.target.value; touch(); });

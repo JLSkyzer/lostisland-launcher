@@ -80,9 +80,9 @@ async function lancer(envoyer) {
       javaPath: java,
       forge: installeur,
       version: { number: MINECRAFT, type: "release" },
-      // Avec les arguments optimisés : minimum = maximum (conseil de la référence), sauf sur un PC de moins de 16 Go
-      // où le jeu occuperait presque toute la mémoire dès le démarrage.
-      memory: { max: `${ram}G`, min: r.argsOptimises && stockage.ramPc() >= 16 ? `${ram}G` : "2G" },
+      // Comme CurseForge (-Xmx choisi, -Xms256m) : Java fait grandir le tas selon le besoin. Imposer -Xms = -Xmx
+      // n'apporte rien au client et faisait partie de la configuration qui donnait des micro-saccades.
+      memory: { max: `${ram}G`, min: "256M" },
       customArgs: java_args.args,
     });
     if (!enfant) throw new Error(dernierProbleme(journal) ?? "Minecraft n'a pas pu démarrer.");

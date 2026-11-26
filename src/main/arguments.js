@@ -1,4 +1,10 @@
-// Arguments Java du jeu : le jeu d'arguments optimisés et les arguments libres saisis par le joueur.
+// Arguments Java du jeu : le jeu d'arguments « optimisés » et les arguments libres saisis par le joueur.
+//
+// DÉSACTIVÉ PAR DÉFAUT depuis la 0.2.7. Activé par défaut jusqu'à la 0.2.6, il faisait la seule différence avec
+// CurseForge, où les mêmes joueurs, même modpack, n'ont pas de micro-saccades : CurseForge lance Java avec
+// -Xmx, -Xms256m, -Xss1M et rien d'autre (rapports de plantage des deux lanceurs, 18/11/2026). La référence
+// elle-même juge les jeux G1 de type Aikar mauvais pour un client et conseille Shenandoah côté client. Ne pas le
+// réactiver par défaut sans mesure en jeu (Spark : /sparkc gcmonitor) des deux configurations.
 //
 // Arguments optimisés : « Base Java Flags » + jeu G1GC de brucethemoose
 // (github.com/brucethemoose/Minecraft-Performance-Flags-Benchmarks), G1GC étant conseillé pour les PC avec peu de

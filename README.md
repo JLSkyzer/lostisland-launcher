@@ -45,7 +45,9 @@ de 8 Go (curseur de mémoire).
 ## Mémoire et arguments Java
 
 Le curseur de mémoire va de 2 Go jusqu'à la mémoire réelle du PC (`stockage.ramPc`) ; une valeur enregistrée plus
-grande est ramenée à cette limite, à l'affichage comme au lancement. Les arguments optimisés (activés par défaut) et
+grande est ramenée à cette limite, à l'affichage comme au lancement. Le jeu démarre comme sous CurseForge : `-Xmx` du
+curseur, `-Xms256M`, ramasse-miettes par défaut de Java. Les arguments « expérimentaux » (ex-« optimisés », désactivés
+par défaut depuis la 0.2.7 : ils donnaient des micro-saccades absentes sous CurseForge) et
 le découpage des arguments saisis par le joueur sont dans `src/main/arguments.js` (source et réglages écartés
 expliqués en tête du fichier). Toute modification de la liste doit être vérifiée sur le Java du jeu :
 `java -XX:+PrintFlagsFinal <arguments> -version` doit sortir en code 0, sinon Minecraft ne démarre plus.

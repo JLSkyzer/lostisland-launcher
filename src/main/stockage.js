@@ -20,7 +20,8 @@ const DEFAUTS = {
   apres: "keep", // keep | min | close
   rester: true,
   animations: true,
-  argsOptimises: true, // arguments Java optimisés (voir arguments.js)
+  argsOptimises: false, // arguments Java « optimisés » (voir arguments.js) : désactivés, cause des micro-saccades
+  argsRevision: 2, // 2 : argsOptimises remis à false une fois chez tous les joueurs (launcher 0.2.7)
   argsJava: "", // arguments Java supplémentaires saisis par le joueur
   optionnels: {}, // id du mod optionnel -> activé ou non (absent : valeur par défaut du manifeste)
   vue: null, // dernière annonce lue
@@ -31,7 +32,11 @@ let cache = null;
 function lire() {
   if (cache) return cache;
   try {
-    cache = { ...DEFAUTS, ...JSON.parse(fs.readFileSync(fichier(), "utf8")) };
+    const brut = JSON.parse(fs.readFileSync(fichier(), "utf8"));
+    cache = { ...DEFAUTS, ...brut };
+    // Jusqu'à la 0.2.6, les arguments optimisés étaient activés par défaut et enregistrés à chaque passage par les
+    // paramètres : on les coupe une fois chez tout le monde. Un joueur qui les réactive ensuite les garde.
+    if ((brut.argsRevision ?? 1) < 2) cache = { ...cache, argsOptimises: false, argsRevision: 2 };
   } catch {
     cache = { ...DEFAUTS };
   }
